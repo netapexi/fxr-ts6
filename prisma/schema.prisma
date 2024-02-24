@@ -1,0 +1,128 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+
+
+// Enum for user roles
+enum UserRole {
+  ADMIN
+  DOCTOR
+  STAFF
+  MEMBER
+  USER
+}
+
+model User {
+  id             String     @id @default(auto()) @map("_id") @db.ObjectId
+  name           String?
+  email          String?    @unique
+  emailVerified  Boolean?   @default(false)
+  emailVerifiedDt DateTime?
+  emailVerifyCount Int?
+  image          String?
+  hashedPassword String?
+  password       String
+  picture        String?
+  role           UserRole  @default(USER) // Default role is USER
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  verificationToken String?
+
+  accounts       Account[]
+  profile        UserProfile? // Link to user profile
+  organization   Organization? // Link to organization for farmers
+  phone           String?
+  subscriptions Subscription[]
+  assignedTasks Task[]
+}
+
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  //user              String?
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
+  
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+// Model for normal user profile
+model UserProfile {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @unique @db.ObjectId
+  // Add other fields for user onboarding information
+  // For example:
+  dateOfBirth DateTime?
+  address    String?
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Model for organization (e.g., for farmers)
+model Organization {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @unique @db.ObjectId
+  // Add other fields for organization onboarding information
+  // For example:
+  organizationName String?
+  location         String?
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Subscription {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @unique @db.ObjectId
+  package      String
+  purchaseDate DateTime
+  paidAmount   Float
+  renewalDate  DateTime
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Task {
+  id           String      @id @default(auto()) @map("_id") @db.ObjectId
+  manager      Manager     @relation(fields: [managerId], references: [id])
+  managerId    String       @unique @db.ObjectId
+  user         User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String     @unique @db.ObjectId
+  createDate   DateTime
+  status       Task_Status?
+  remarks      String?
+}
+model Manager {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  username    String       @unique
+  email       String       @unique
+  assignedTasks Task[]
+}
+
+enum Task_Status {
+  ACTIVE
+  INACTIVE
+  PENDING
+  CLOSED
+}
+
+
+
