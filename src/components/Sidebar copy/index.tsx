@@ -5,9 +5,6 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import SidebarLinkGroup from "./SidebarLinkGroup";
-import router from "next/router";
-import { useSession } from "next-auth/react";
-
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -15,15 +12,6 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
-
-  const {data:session,status}=useSession();
-  if(status==='loading'){
-    return <p>prepairing your dashboard...</p>
-  }
-  if(status==='unauthenticated'){
-    //router.push("/auth/signin");
-    //return; 
-  }
   const pathname = usePathname();
 
   const trigger = useRef<any>(null);
